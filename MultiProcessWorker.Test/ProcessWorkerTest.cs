@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MultiProcessWorker.Public.Exceptions;
+﻿using MultiProcessWorker.Public.Exceptions;
 using NUnit.Framework;
+using System;
 
 namespace MultiProcessWorker.Test
 {
@@ -32,6 +28,14 @@ namespace MultiProcessWorker.Test
             Assert.Throws<ProcessWorkerRemoteException>(() => ProcessWorker.RunAndWait(RemoteExceptionExecute));
         }
 
+        [Test]
+        public void ProcessWorkerWithParameterOkTest()
+        {
+            const string input = " input test";
+            var data = ProcessWorker.RunAndWait(RemoteExeute, input);
+            Assert.AreEqual(TestData + input, data);
+        }
+
         public static string RemoteExecute()
         {
             return TestData;
@@ -45,6 +49,11 @@ namespace MultiProcessWorker.Test
         public static string RemoteExceptionExecute()
         {
             throw new InvalidOperationException("Remote Exception!");
+        }
+
+        public static string RemoteExeute(string input)
+        {
+            return TestData + input;
         }
     }
 }

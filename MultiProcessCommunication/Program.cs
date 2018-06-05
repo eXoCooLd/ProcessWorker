@@ -6,6 +6,9 @@ using MultiProcessWorker.Public.Exceptions;
 
 namespace MultiProcessCommunication
 {
+    /// <summary>
+    /// Example program
+    /// </summary>
     public class Program
     {
         public static void Main(string[] args)
@@ -46,6 +49,10 @@ namespace MultiProcessCommunication
             }
         }
 
+        /// <summary>
+        /// Workjob with simulated delay
+        /// </summary>
+        /// <returns></returns>
         public static string ExecuteMeNow()
         {
             Console.WriteLine("Starting work...");
@@ -56,6 +63,10 @@ namespace MultiProcessCommunication
             return text;
         }
 
+        /// <summary>
+        /// Workjob
+        /// </summary>
+        /// <returns></returns>
         public static string ExecuteThisNow()
         {
             var text = "Blabla from: " + Process.GetCurrentProcess().Id;
@@ -63,6 +74,10 @@ namespace MultiProcessCommunication
             return text;
         }
 
+        /// <summary>
+        /// Exception in the remote program
+        /// </summary>
+        /// <returns></returns>
         public static string ExecuteFuckedUp()
         {
             throw new InvalidOperationException("FuckedUp by: " + Process.GetCurrentProcess().Id);

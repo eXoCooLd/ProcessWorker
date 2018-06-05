@@ -1,4 +1,30 @@
-﻿using MultiProcessWorker.Private.Helper;
+﻿#region Copyright
+// --------------------------------------------------------------------------------------------------------------------
+// MIT License
+// Copyright(c) 2018 Andre Wehrli
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// --------------------------------------------------------------------------------------------------------------------
+#endregion Copyright
+
+#region Used Namespaces
+using MultiProcessWorker.Private.Helper;
 using MultiProcessWorker.Private.Ipc;
 using MultiProcessWorker.Private.ProcessData;
 using MultiProcessWorker.Public.ProcessData;
@@ -7,11 +33,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+#endregion Used Namespaces
 
 namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 {
+    /// <summary>
+    /// ProcessWorker runner
+    /// </summary>
     internal sealed class MultiProcessWorkerRunner : IDisposable
     {
+
+        #region Fields
+
         private bool m_Run;
 
         private readonly ProcessArguments m_ProcessArguments;
@@ -19,6 +52,14 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         private Process m_ParentProcess;
 
+        #endregion Fields
+
+        #region Constructor / Dispose
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="processArguments"></param>
         private MultiProcessWorkerRunner(ProcessArguments processArguments)
         {
             m_ProcessArguments = processArguments;
@@ -31,6 +72,10 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             m_WorkCommands = new Queue<WorkCommand>();
         }
+
+        /// <summary>
+        /// Dispose
+        /// </summary>
         public void Dispose()
         {
             m_Run = false;
@@ -44,6 +89,10 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
                 m_ParentProcess = null;
             }
         }
+
+        #endregion Constructor / Dispose
+
+        #region Public
 
         public static MultiProcessWorkerRunner Create(string[] args)
         {
@@ -77,6 +126,10 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             Environment.Exit((int)ExitCode.Ok);
         }
 
+        #endregion Public
+
+        #region Private
+
         private void WorkThreadMain(IpcCommunication<WorkCommand, WorkResult> ipcCommunication)
         {
             while (m_Run)
@@ -106,7 +159,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             try
             {
-                var result = methodInfo.DoWork();
+                var result = methodInfo.Execute(workItem.Parameter);
                 ipcCommunication.SendData(WorkResult.Create(workItem, result));
             }
             catch (Exception exception)
@@ -142,5 +195,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             Dispose();
             Environment.Exit((int)ExitCode.ErrorParentCrash);
         }
+
+        #endregion Private
     }
 }

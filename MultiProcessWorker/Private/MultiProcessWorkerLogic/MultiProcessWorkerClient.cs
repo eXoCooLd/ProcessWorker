@@ -1,4 +1,30 @@
-﻿using MultiProcessWorker.Private.Helper;
+﻿#region Copyright
+// --------------------------------------------------------------------------------------------------------------------
+// MIT License
+// Copyright(c) 2018 Andre Wehrli
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// --------------------------------------------------------------------------------------------------------------------
+#endregion Copyright
+
+#region Used Namespaces
+using MultiProcessWorker.Private.Helper;
 using MultiProcessWorker.Private.Ipc;
 using MultiProcessWorker.Private.ProcessData;
 using MultiProcessWorker.Public.EventArgs;
@@ -10,6 +36,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+#endregion Used Namespaces
 
 namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 {
@@ -109,12 +136,70 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         #region Public
 
-        public Guid Execute<T>(Func<T> action) where T : class
+        public Guid Execute<TResult>(Func<TResult> action) where TResult : class
         {
             IsDisposedCheck();
 
             var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name);
 
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, TResult>(Func<T1, TResult> action, T1 p1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1 } );
+
+            return StartWork(newWorkCommand);
+        }
+
+        public TResult ExecuteWait<TResult>(Func<TResult> action, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        public TResult ExecuteWait<TResult, TIn>(Func<TIn, TResult> action, TIn p1, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        public bool IsDataReady(Guid guid)
+        {
+            IsDisposedCheck();
+
+            return m_WorkCommandResults.ContainsKey(guid);
+        }
+
+        public TResult GetResult<TResult>(Guid guid) where TResult : class
+        {
+            IsDisposedCheck();
+
+            return IsDataReady(guid) ? GetData<TResult>(guid) : default(TResult);
+        }
+
+        #endregion Public
+
+        #region Internal
+
+        private void IsDisposedCheck()
+        {
+            if (m_IsDisposed)
+            {
+                throw new ObjectDisposedException(nameof(MultiProcessWorkerClient));
+            }
+        }
+
+        private Guid StartWork(WorkCommand newWorkCommand)
+        {
             var methodInfo = newWorkCommand.GetMethodInfo();
             if (!methodInfo.CheckMethodInfo())
             {
@@ -126,19 +211,15 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return newWorkCommand.Guid;
         }
 
-        public T ExecuteWait<T>(Func<T> action, long maxWait = -1) where T : class
+        private TResult WaitForWorkDone<TResult>(long maxWait, Guid guid) where TResult : class
         {
-            IsDisposedCheck();
-
-            var guid = Execute(action);
-
             var timeOut = GetTimeOut(maxWait);
 
             do
             {
                 if (IsDataReady(guid))
                 {
-                    return GetData<T>(guid);
+                    return GetData<TResult>(guid);
                 }
 
                 if (m_WorkerProcess.HasExited)
@@ -147,72 +228,47 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
                 }
 
                 Thread.Sleep(1);
-
             } while (DateTime.UtcNow.Ticks < timeOut);
 
-            return default(T);
+            return default(TResult);
         }
 
-        public bool IsDataReady(Guid guid)
+        private TResult GetData<TResult>(Guid guid) where TResult : class
         {
-            IsDisposedCheck();
-
-            return m_WorkCommandResults.ContainsKey(guid);
-        }
-
-        public T GetResult<T>(Guid guid) where T : class
-        {
-            IsDisposedCheck();
-
-            return IsDataReady(guid) ? GetData<T>(guid) : default(T);
-        }
-
-        #endregion Public
-
-        #region Internal
-
-        internal void IsDisposedCheck()
-        {
-            if (m_IsDisposed)
-            {
-                throw new ObjectDisposedException(nameof(MultiProcessWorkerClient));
-            }
-        }
-
-        internal T GetData<T>(Guid guid) where T : class
-        {
-            if (m_WorkCommandResults.TryRemove(guid, out var workResult))
+            WorkResult workResult;
+            if (m_WorkCommandResults.TryRemove(guid, out workResult))
             {
                 if (workResult.Exception == null)
                 {
-                    return workResult.Result as T;
+                    return workResult.Result as TResult;
                 }
 
                 throw new ProcessWorkerRemoteException(workResult.Exception);
             }
 
-            return default(T);
+            return default(TResult);
         }
 
-        internal void OnIpcCommunicationMessageRecived(object sender, WorkResult e)
+        private void OnIpcCommunicationMessageRecived(object sender, WorkResult e)
         {
             m_WorkCommandResults[e.Guid] = e;
             WorkComplete?.Invoke(this, new WorkCompleteEventArgs(e.Guid));
         }
 
-        internal void OnWorkerProcessDisposed(object sender, EventArgs e)
+        private void OnWorkerProcessDisposed(object sender, EventArgs e)
         {
             HandleProcessExit(sender);
         }
 
-        internal void OnWorkerProcessExited(object sender, EventArgs e)
+        private void OnWorkerProcessExited(object sender, EventArgs e)
         {
             HandleProcessExit(sender);
         }
 
-        internal void HandleProcessExit(object sender)
+        private void HandleProcessExit(object sender)
         {
-            if (sender is Process process)
+            var process = sender as Process;
+            if (process != null)
             {
                 var exitCode = (ExitCode)process.ExitCode;
                 RemoteProcessExit?.Invoke(this, exitCode);
@@ -225,14 +281,14 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             }
         }
 
-        internal static long GetTimeOut(long maxWait)
+        private static long GetTimeOut(long maxWait)
         {
             var timeOut = maxWait > 0 ? DateTime.UtcNow.Ticks + maxWait * TimeSpan.TicksPerMillisecond : long.MaxValue;
 
             return timeOut;
         }
 
-        internal Process CreateProcess(string processArguments)
+        private Process CreateProcess(string processArguments)
         {
             var processStartInfo = new ProcessStartInfo(MultiProcessWorkerExePath, processArguments)
             {
