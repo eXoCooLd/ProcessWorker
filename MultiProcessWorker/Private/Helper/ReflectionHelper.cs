@@ -49,8 +49,12 @@ namespace MultiProcessWorker.Private.Helper
         public static MethodInfo GetMethodInfo(this WorkCommand workCommand)
         {
             var methodInfo = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod);
+            if (methodInfo != null)
+            {
+                return methodInfo;
+            }
 
-            return methodInfo;
+            return null;
         }
 
         /// <summary>
@@ -92,14 +96,23 @@ namespace MultiProcessWorker.Private.Helper
         /// <returns></returns>
         public static object Execute(this MethodInfo methodInfo, object[] parameter = null)
         {
-            object result = null;
-
-            if (methodInfo != null)
+            if (methodInfo == null)
             {
-                result = methodInfo.Invoke(null, parameter);
+                return null;
             }
 
-            return result;
+            if (methodInfo.IsStatic)
+            {
+                return methodInfo.Invoke(null, parameter);
+            }
+
+            if (methodInfo.DeclaringType == null)
+            {
+                return null;
+            }
+
+            var declaringInstance = Activator.CreateInstance(methodInfo.DeclaringType);
+            return methodInfo.Invoke(declaringInstance, parameter);
         }
 
     }

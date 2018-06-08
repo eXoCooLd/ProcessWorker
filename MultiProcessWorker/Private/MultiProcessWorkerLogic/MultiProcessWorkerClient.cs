@@ -58,19 +58,33 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         #region Properties
 
+        /// <summary>
+        /// Path to the ProcessWorker.exe
+        /// </summary>
         internal static string MultiProcessWorkerExePath => AssemblyHelper.CurrentAssemblyPath;
 
         #endregion Properties
 
         #region Events
 
+        /// <summary>
+        /// Remote Process Exit Event
+        /// </summary>
         public event EventHandler<ExitCode> RemoteProcessExit;
+
+        /// <summary>
+        /// Work Complete Event
+        /// </summary>
         public event EventHandler<WorkCompleteEventArgs> WorkComplete;
 
         #endregion Events
 
         #region Constructor / Dispose
 
+        /// <summary>
+        /// Constructor with interprocess communication name
+        /// </summary>
+        /// <param name="ipcName"></param>
         internal MultiProcessWorkerClient(string ipcName)
         {
             var processArguments = ProcessArguments.Create(ipcName);
@@ -88,6 +102,10 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             m_WorkerProcess.Start();
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             m_IsDisposed = true;
@@ -121,12 +139,18 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             }
         }
 
+        /// <summary>
+        /// Dispose
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizer
+        /// </summary>
         ~MultiProcessWorkerClient()
         {
             Dispose(false);
@@ -136,6 +160,12 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         #region Public
 
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <returns></returns>
         public Guid Execute<TResult>(Func<TResult> action) where TResult : class
         {
             IsDisposedCheck();
@@ -145,6 +175,14 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return StartWork(newWorkCommand);
         }
 
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <returns></returns>
         public Guid Execute<T1, TResult>(Func<T1, TResult> action, T1 p1) where TResult : class
         {
             IsDisposedCheck();
@@ -154,6 +192,256 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return StartWork(newWorkCommand);
         }
 
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, TResult>(Func<T1, T2, TResult> action, T1 p1, T2 p2) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, T6, TResult>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <typeparam name="T9"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <param name="p9"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and return it's jobid
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <typeparam name="T9"></typeparam>
+        /// <typeparam name="T10"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <param name="p9"></param>
+        /// <param name="p10"></param>
+        /// <returns></returns>
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
         public TResult ExecuteWait<TResult>(Func<TResult> action, long maxWait = -1) where TResult : class
         {
             IsDisposedCheck();
@@ -163,7 +451,16 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return WaitForWorkDone<TResult>(maxWait, guid);
         }
 
-        public TResult ExecuteWait<TResult, TIn>(Func<TIn, TResult> action, TIn p1, long maxWait = -1) where TResult : class
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1>(Func<T1, TResult> action, T1 p1, long maxWait = -1) where TResult : class
         {
             IsDisposedCheck();
 
@@ -172,6 +469,263 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return WaitForWorkDone<TResult>(maxWait, guid);
         }
 
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2>(Func<T1, T2, TResult> action, T1 p1, T2 p2, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <typeparam name="T9"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <param name="p9"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Execute a work job and wait for the result
+        /// </summary>
+        /// <typeparam name="TResult"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <typeparam name="T3"></typeparam>
+        /// <typeparam name="T4"></typeparam>
+        /// <typeparam name="T5"></typeparam>
+        /// <typeparam name="T6"></typeparam>
+        /// <typeparam name="T7"></typeparam>
+        /// <typeparam name="T8"></typeparam>
+        /// <typeparam name="T9"></typeparam>
+        /// <typeparam name="T10"></typeparam>
+        /// <param name="action"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="p3"></param>
+        /// <param name="p4"></param>
+        /// <param name="p5"></param>
+        /// <param name="p6"></param>
+        /// <param name="p7"></param>
+        /// <param name="p8"></param>
+        /// <param name="p9"></param>
+        /// <param name="p10"></param>
+        /// <param name="maxWait"></param>
+        /// <returns></returns>
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10, long maxWait = -1) where TResult : class
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+
+            return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        /// <summary>
+        /// Check if the result of a job is ready
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
         public bool IsDataReady(Guid guid)
         {
             IsDisposedCheck();
@@ -179,6 +733,12 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return m_WorkCommandResults.ContainsKey(guid);
         }
 
+        /// <summary>
+        /// Get the result of a job
+        /// </summary>
+        /// <typeparam name="TResult">Job result</typeparam>
+        /// <param name="guid">work job id</param>
+        /// <returns></returns>
         public TResult GetResult<TResult>(Guid guid) where TResult : class
         {
             IsDisposedCheck();
@@ -293,7 +853,8 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             var processStartInfo = new ProcessStartInfo(MultiProcessWorkerExePath, processArguments)
             {
                 UseShellExecute = true,
-                CreateNoWindow = false
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
             };
 
             var workerProcess = new Process
