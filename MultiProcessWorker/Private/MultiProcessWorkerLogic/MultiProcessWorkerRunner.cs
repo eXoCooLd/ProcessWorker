@@ -52,7 +52,27 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         private Process m_ParentProcess;
 
+        private object m_HostedObject;
+        private readonly Type m_HostedType;
+
         #endregion Fields
+
+        #region Properties
+
+        internal object HostedObject
+        {
+            get
+            {
+                if (m_HostedObject == null && m_ProcessArguments.IpcRemoteType != null)
+                {
+                    m_HostedObject = m_ProcessArguments.IpcRemoteType.CreateInstance();
+                }
+
+                return m_HostedObject;
+            }
+        }
+
+        #endregion Properties
 
         #region Constructor / Dispose
 
@@ -60,9 +80,10 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// Constructor
         /// </summary>
         /// <param name="processArguments"></param>
-        private MultiProcessWorkerRunner(ProcessArguments processArguments)
+        internal MultiProcessWorkerRunner(ProcessArguments processArguments)
         {
             m_ProcessArguments = processArguments;
+            m_HostedType = processArguments.IpcRemoteType;
 
             AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
 
@@ -79,6 +100,12 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         public void Dispose()
         {
             m_Run = false;
+
+            if (m_HostedObject != null)
+            {
+                (m_HostedObject as IDisposable)?.Dispose();
+                m_HostedObject = null;
+            }
 
             if (m_ParentProcess != null)
             {
@@ -132,6 +159,14 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
         private void WorkThreadMain(IpcCommunication<WorkCommand, WorkResult> ipcCommunication)
         {
+            if (m_HostedType != null)
+            {
+                if (HostedObject == null)
+                {
+                    throw new NullReferenceException(nameof(HostedObject));
+                }
+            }
+
             while (m_Run)
             {
                 if (m_WorkCommands.Count > 0)
@@ -151,7 +186,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         private void DoWork(IpcCommunication<WorkCommand, WorkResult> ipcCommunication)
         {
             var workItem = m_WorkCommands.Dequeue();
-            var methodInfo = workItem.GetMethodInfo();
+            var methodInfo = workItem.GetMethodInfo(m_HostedType);
             if (methodInfo == null)
             {
                 return;
@@ -159,7 +194,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             try
             {
-                var result = methodInfo.Execute(workItem.Parameter);
+                var result = methodInfo.Execute(HostedObject, workItem.Parameter);
                 ipcCommunication.SendData(WorkResult.Create(workItem, result));
             }
             catch (Exception exception)

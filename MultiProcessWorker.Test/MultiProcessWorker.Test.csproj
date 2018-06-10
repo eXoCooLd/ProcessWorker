@@ -53,6 +53,7 @@
     <Compile Include="Private\Helper\AssemblyHelperTest.cs" />
     <Compile Include="Private\Helper\ReflectionHelperTest.cs" />
     <Compile Include="Private\ProcessData\ProcessArgumentsTest.cs" />
+    <Compile Include="ProcessWorkerHostedObjectTest.cs" />
     <Compile Include="ProcessWorkerTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

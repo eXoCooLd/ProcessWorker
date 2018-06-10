@@ -45,6 +45,7 @@ namespace MultiProcessWorker.Private.ProcessData
         private const string IpcClientNameKey = "C";
         private const string IpcProcessNameKey = "P";
         private const string IpcParentProgramKey = "X";
+        private const string IpcRemoteTypeKey = "R";
 
         private const string ClientPostfix = "_Client";
         private const string ServerPostfix = "_Server";
@@ -109,6 +110,20 @@ namespace MultiProcessWorker.Private.ProcessData
             set { this[IpcParentProgramKey] = value.ToString(); }
         }
 
+        public Type IpcRemoteType
+        {
+            get
+            {
+                var typeString = this[IpcRemoteTypeKey];
+                return !string.IsNullOrEmpty(typeString) ? Type.GetType(typeString) : null;
+            }
+            set
+            {
+                var typeString = value?.AssemblyQualifiedName;
+                this[IpcRemoteTypeKey] = typeString;
+            }
+        }
+
         public bool IsValid => m_Arguments.ContainsKey(IpcServerNameKey) &&
                                m_Arguments.ContainsKey(IpcClientNameKey) &&
                                m_Arguments.ContainsKey(IpcProcessNameKey) &&
@@ -124,15 +139,16 @@ namespace MultiProcessWorker.Private.ProcessData
             return processArguments.IsValid ? processArguments : null;
         }
 
-        public static ProcessArguments Create(string ipcName)
+        public static ProcessArguments Create(string ipcName, Type remoteType = null)
         {
             var processArguments = new ProcessArguments
                                     {
                                         IpcClientName = CreateIpcClientName(ipcName),
                                         IpcServerName = CreateIpcServerName(ipcName),
                                         IpcProcessName = CreateIpcProcessName(ipcName),
-                                        IpcParentProgramPid = GetParentProgramPid()
-                                    };
+                                        IpcParentProgramPid = GetParentProgramPid(),
+                                        IpcRemoteType = remoteType
+            };
             return processArguments;
         }
 

@@ -45,13 +45,23 @@ namespace MultiProcessWorker.Private.Helper
         /// Get the MethodInfo from a WorkCommand
         /// </summary>
         /// <param name="workCommand"></param>
+        /// <param name="type"></param>
         /// <returns></returns>
-        public static MethodInfo GetMethodInfo(this WorkCommand workCommand)
+        public static MethodInfo GetMethodInfo(this WorkCommand workCommand, Type type = null)
         {
-            var methodInfo = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod);
-            if (methodInfo != null)
+            if (type != null)
             {
-                return methodInfo;
+                var methodInfo = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.Instance);
+                if (methodInfo != null)
+                {
+                    return methodInfo;
+                }
+            }
+
+            var methodInfoStatic = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod);
+            if (methodInfoStatic != null)
+            {
+                return methodInfoStatic;
             }
 
             return null;
@@ -92,9 +102,10 @@ namespace MultiProcessWorker.Private.Helper
         /// Execute a workjob
         /// </summary>
         /// <param name="methodInfo"></param>
+        /// <param name="hostedObject"></param>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public static object Execute(this MethodInfo methodInfo, object[] parameter = null)
+        public static object Execute(this MethodInfo methodInfo, object hostedObject = null, object[] parameter = null)
         {
             if (methodInfo == null)
             {
@@ -106,14 +117,19 @@ namespace MultiProcessWorker.Private.Helper
                 return methodInfo.Invoke(null, parameter);
             }
 
-            if (methodInfo.DeclaringType == null)
+            if (hostedObject != null)
             {
-                return null;
+                return methodInfo.Invoke(hostedObject, parameter);
             }
 
-            var declaringInstance = Activator.CreateInstance(methodInfo.DeclaringType);
-            return methodInfo.Invoke(declaringInstance, parameter);
+            return null;
         }
 
+        public static object CreateInstance(this Type type)
+        {
+            object instance = Activator.CreateInstance(type);
+
+            return instance;
+        }
     }
 }

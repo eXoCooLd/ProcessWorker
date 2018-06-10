@@ -1,6 +1,7 @@
 ﻿using MultiProcessWorker.Public.Exceptions;
 using NUnit.Framework;
 using System;
+using System.Threading;
 
 namespace MultiProcessWorker.Test
 {
@@ -74,6 +75,11 @@ namespace MultiProcessWorker.Test
             Assert.AreEqual(TestData + p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10, data10);
         }
 
+        [Test]
+        public void ProcessWorkerWithReturnTest()
+        {
+            ProcessWorker.RunAndWait(RemoteExecuteNoReturn, 1000);
+        }
         #endregion Tests
 
         #region Test Methods
@@ -143,6 +149,10 @@ namespace MultiProcessWorker.Test
             return TestData + p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9 + p10;
         }
 
+        public static void RemoteExecuteNoReturn()
+        {
+            Thread.Sleep(5);
+        }
         #endregion Test Methods
 
     }

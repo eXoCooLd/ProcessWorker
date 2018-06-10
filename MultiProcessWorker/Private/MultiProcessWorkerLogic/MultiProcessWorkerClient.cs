@@ -46,7 +46,6 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         #region Fields
 
         private readonly ConcurrentDictionary<Guid, WorkResult> m_WorkCommandResults;
-
         private IpcCommunication<WorkCommand, WorkResult> m_IpcCommunication;
         private EventWaitHandle m_ProcessEventWaitHandle;
 
@@ -62,6 +61,8 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// Path to the ProcessWorker.exe
         /// </summary>
         internal static string MultiProcessWorkerExePath => AssemblyHelper.CurrentAssemblyPath;
+
+        public Type HostedObjecType { get; }
 
         #endregion Properties
 
@@ -85,10 +86,23 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// Constructor with interprocess communication name
         /// </summary>
         /// <param name="ipcName"></param>
-        internal MultiProcessWorkerClient(string ipcName)
+        internal MultiProcessWorkerClient(string ipcName) : this(ProcessArguments.Create(ipcName))
         {
-            var processArguments = ProcessArguments.Create(ipcName);
+            HostedObjecType = null;
+        }
 
+        /// <summary>
+        /// Create a remote worker with a hosted object
+        /// </summary>
+        /// <param name="ipcName"></param>
+        /// <param name="remoteType"></param>
+        internal MultiProcessWorkerClient(string ipcName, Type remoteType) : this(ProcessArguments.Create(ipcName, remoteType))
+        {
+            HostedObjecType = remoteType;
+        }
+
+        private MultiProcessWorkerClient(ProcessArguments processArguments)
+        {
             m_WorkCommandResults = new ConcurrentDictionary<Guid, WorkResult>();
 
             m_IpcCommunication = IpcCommunication<WorkCommand, WorkResult>.CreateServer(processArguments.IpcServerName, processArguments.IpcClientName);
@@ -166,11 +180,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <typeparam name="TResult"></typeparam>
         /// <param name="action"></param>
         /// <returns></returns>
-        public Guid Execute<TResult>(Func<TResult> action) where TResult : class
+        public Guid Execute<TResult>(Func<TResult> action)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name);
+            var newWorkCommand = BuildWorkCommand(action);
 
             return StartWork(newWorkCommand);
         }
@@ -183,11 +197,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="action"></param>
         /// <param name="p1"></param>
         /// <returns></returns>
-        public Guid Execute<T1, TResult>(Func<T1, TResult> action, T1 p1) where TResult : class
+        public Guid Execute<T1, TResult>(Func<T1, TResult> action, T1 p1)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1 } );
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1 });
 
             return StartWork(newWorkCommand);
         }
@@ -202,11 +216,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p1"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, TResult>(Func<T1, T2, TResult> action, T1 p1, T2 p2) where TResult : class
+        public Guid Execute<T1, T2, TResult>(Func<T1, T2, TResult> action, T1 p1, T2 p2)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2 });
 
             return StartWork(newWorkCommand);
         }
@@ -223,11 +237,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p2"></param>
         /// <param name="p3"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3) where TResult : class
+        public Guid Execute<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3 });
 
             return StartWork(newWorkCommand);
         }
@@ -246,11 +260,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p3"></param>
         /// <param name="p4"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4 });
 
             return StartWork(newWorkCommand);
         }
@@ -271,11 +285,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p4"></param>
         /// <param name="p5"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5 });
 
             return StartWork(newWorkCommand);
         }
@@ -298,11 +312,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p5"></param>
         /// <param name="p6"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, T6, TResult>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, T6, TResult>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6 });
 
             return StartWork(newWorkCommand);
         }
@@ -327,11 +341,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p6"></param>
         /// <param name="p7"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7 });
 
             return StartWork(newWorkCommand);
         }
@@ -358,11 +372,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p7"></param>
         /// <param name="p8"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8 });
 
             return StartWork(newWorkCommand);
         }
@@ -391,11 +405,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p8"></param>
         /// <param name="p9"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9 });
 
             return StartWork(newWorkCommand);
         }
@@ -426,11 +440,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p9"></param>
         /// <param name="p10"></param>
         /// <returns></returns>
-        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10) where TResult : class
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10)
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 });
 
             return StartWork(newWorkCommand);
         }
@@ -442,7 +456,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="action"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult>(Func<TResult> action, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult>(Func<TResult> action, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -460,7 +474,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p1"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1>(Func<T1, TResult> action, T1 p1, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1>(Func<T1, TResult> action, T1 p1, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -480,7 +494,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p2"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2>(Func<T1, T2, TResult> action, T1 p1, T2 p2, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2>(Func<T1, T2, TResult> action, T1 p1, T2 p2, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -502,7 +516,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p3"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3>(Func<T1, T2, T3, TResult> action, T1 p1, T2 p2, T3 p3, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -526,7 +540,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p4"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4>(Func<T1, T2, T3, T4, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -552,7 +566,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p5"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5>(Func<T1, T2, T3, T4, T5, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -580,7 +594,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p6"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6>(Func<T1, T2, T3, T4, T5, T6, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -610,7 +624,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p7"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7>(Func<T1, T2, T3, T4, T5, T6, T7, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -642,7 +656,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p8"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8>(Func<T1, T2, T3, T4, T5, T6, T7, T8, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -676,7 +690,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p9"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, long maxWait = -1)
         {
             IsDisposedCheck();
 
@@ -712,13 +726,248 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="p10"></param>
         /// <param name="maxWait"></param>
         /// <returns></returns>
-        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10, long maxWait = -1) where TResult : class
+        public TResult ExecuteWait<TResult, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Func<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, TResult> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10, long maxWait = -1)
         {
             IsDisposedCheck();
 
             var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
 
             return WaitForWorkDone<TResult>(maxWait, guid);
+        }
+
+        public Guid Execute(Action action)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name);
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1>(Action<T1> action, T1 p1)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2>(Action<T1, T2> action, T1 p1, T2 p2)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3>(Action<T1, T2, T3> action, T1 p1, T2 p2, T3 p3)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action, T1 p1, T2 p2, T3 p3, T4 p4)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7>(Action<T1, T2, T3, T4, T5, T6, T7> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8>(Action<T1, T2, T3, T4, T5, T6, T7, T8> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9>(Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8,
+            T9 p9)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public Guid Execute<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7,
+            T8 p8, T9 p9, T10 p10)
+        {
+            IsDisposedCheck();
+
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1, p2, p3, p4, p5, p6, p7, p8, p9, p10 });
+
+            return StartWork(newWorkCommand);
+        }
+
+        public void ExecuteWait(Action action, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1>(Action<T1> action, T1 p1, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2>(Action<T1, T2> action, T1 p1, T2 p2, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3>(Action<T1, T2, T3> action, T1 p1, T2 p2, T3 p3, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action, T1 p1, T2 p2, T3 p3, T4 p4, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5>(Action<T1, T2, T3, T4, T5> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5, T6>(Action<T1, T2, T3, T4, T5, T6> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5, T6, T7>(Action<T1, T2, T3, T4, T5, T6, T7> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7,
+            long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5, T6, T7, T8>(Action<T1, T2, T3, T4, T5, T6, T7, T8> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8,
+            long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5, T6, T7, T8, T9>(Action<T1, T2, T3, T4, T5, T6, T7, T8, T9> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8, p9);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
+        }
+
+        public void ExecuteWait<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(Action<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5, T6 p6, T7 p7, T8 p8, T9 p9, T10 p10, long maxWait = -1)
+        {
+            IsDisposedCheck();
+
+            var guid = Execute(action, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+
+            if (!WaitForWorkDone(maxWait, guid))
+            {
+                throw new TimeoutException();
+            }
         }
 
         /// <summary>
@@ -739,7 +988,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <typeparam name="TResult">Job result</typeparam>
         /// <param name="guid">work job id</param>
         /// <returns></returns>
-        public TResult GetResult<TResult>(Guid guid) where TResult : class
+        public TResult GetResult<TResult>(Guid guid)
         {
             IsDisposedCheck();
 
@@ -758,9 +1007,18 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             }
         }
 
+        private WorkCommand BuildWorkCommand(Delegate action, object[] parameters = null)
+        {
+            var objectType = HostedObjecType ?? action.Method.DeclaringType;
+
+            var newWorkCommand = WorkCommand.Create(objectType, action.Method.Name, parameters);
+
+            return newWorkCommand;
+        }
+
         private Guid StartWork(WorkCommand newWorkCommand)
         {
-            var methodInfo = newWorkCommand.GetMethodInfo();
+            var methodInfo = newWorkCommand.GetMethodInfo(HostedObjecType);
             if (!methodInfo.CheckMethodInfo())
             {
                 return Guid.Empty;
@@ -771,7 +1029,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return newWorkCommand.Guid;
         }
 
-        private TResult WaitForWorkDone<TResult>(long maxWait, Guid guid) where TResult : class
+        private TResult WaitForWorkDone<TResult>(long maxWait, Guid guid)
         {
             var timeOut = GetTimeOut(maxWait);
 
@@ -793,20 +1051,64 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return default(TResult);
         }
 
-        private TResult GetData<TResult>(Guid guid) where TResult : class
+        private bool WaitForWorkDone(long maxWait, Guid guid)
+        {
+            var timeOut = GetTimeOut(maxWait);
+
+            do
+            {
+                if (IsDataReady(guid))
+                {
+                    return true;
+                }
+
+                if (m_WorkerProcess.HasExited)
+                {
+                    throw new ProcessWorkerCrashedException(m_WorkerProcess, ExitCode.ErrorCrash);
+                }
+
+                Thread.Sleep(1);
+            } while (DateTime.UtcNow.Ticks < timeOut);
+
+            return false;
+        }
+
+        private TResult GetData<TResult>(Guid guid)
         {
             WorkResult workResult;
             if (m_WorkCommandResults.TryRemove(guid, out workResult))
             {
                 if (workResult.Exception == null)
                 {
-                    return workResult.Result as TResult;
+
+                    return ConvertDataToType<TResult>(workResult.Result);
                 }
 
                 throw new ProcessWorkerRemoteException(workResult.Exception);
             }
 
             return default(TResult);
+        }
+
+        private TResult ConvertDataToType<TResult>(object data)
+        {
+            if (data == null)
+            {
+                return default(TResult);
+            }
+
+            TResult result;
+
+            try
+            {
+                result = (TResult)data;
+            }
+            catch (Exception)
+            {
+                result = default(TResult);
+            }
+
+            return result;
         }
 
         private void OnIpcCommunicationMessageRecived(object sender, WorkResult e)
