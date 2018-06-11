@@ -1080,7 +1080,6 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             {
                 if (workResult.Exception == null)
                 {
-
                     return ConvertDataToType<TResult>(workResult.Result);
                 }
 
@@ -1090,7 +1089,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             return default(TResult);
         }
 
-        private TResult ConvertDataToType<TResult>(object data)
+        private static TResult ConvertDataToType<TResult>(object data)
         {
             if (data == null)
             {
@@ -1101,7 +1100,22 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             try
             {
-                result = (TResult)data;
+                var tResultType = typeof(TResult);
+                if (tResultType.IsValueType)
+                {
+                    if (tResultType.IsEnum)
+                    {
+                        result = (TResult)Enum.Parse(typeof(TResult), data.ToString());
+                    }
+                    else
+                    {
+                        result = (TResult)Convert.ChangeType(data, typeof(TResult));
+                    }
+                }
+                else
+                {
+                    result = (TResult)data;
+                }
             }
             catch (Exception)
             {

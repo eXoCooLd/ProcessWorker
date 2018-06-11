@@ -80,6 +80,17 @@ namespace MultiProcessWorker.Test
         {
             ProcessWorker.RunAndWait(RemoteExecuteNoReturn, 1000);
         }
+
+        [Test]
+        public void ConverterTest()
+        {
+            var enumResult = ProcessWorker.RunAndWait(RemoteEnum);
+            Assert.AreEqual(TestEnum.Leet, enumResult);
+
+            var intResult = ProcessWorker.RunAndWait(RemoteInt);
+            Assert.AreEqual(12345, intResult);
+
+        }
         #endregion Tests
 
         #region Test Methods
@@ -155,5 +166,22 @@ namespace MultiProcessWorker.Test
         }
         #endregion Test Methods
 
+        public static TestEnum RemoteEnum()
+        {
+            return TestEnum.Leet;
+        }
+
+        public static int RemoteInt()
+        {
+            return 12345;
+        }
+    }
+
+    public enum TestEnum
+    {
+        Undefined = 0,
+        One = 1,
+        Two = 2,
+        Leet = 1337
     }
 }
