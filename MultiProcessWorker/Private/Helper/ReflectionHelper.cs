@@ -26,6 +26,7 @@
 #region Used Namespaces
 using MultiProcessWorker.Public.WorkItems;
 using System;
+using System.Linq;
 using System.Reflection;
 #endregion Used Namespaces
 
@@ -61,7 +62,9 @@ namespace MultiProcessWorker.Private.Helper
                     var parameterType = workCommand.ParameterTypes[i];
                     var parameterValue = workCommand.Parameter[i];
 
-                    if (parameterValue.GetType() != parameterType)
+                    var value = Convert.ChangeType(parameterValue, parameterType);
+
+                    if (value.GetType() != parameterType)
                     {
                         var exceptionText = $"Parameter {i} Type is: {parameterValue.GetType()} but should be {parameterType}";
                         throw new ArgumentException(exceptionText);
@@ -134,14 +137,36 @@ namespace MultiProcessWorker.Private.Helper
                 return null;
             }
 
+            var parameterTypes = methodInfo.GetParameters().Select(p => p.ParameterType).ToArray();
+            var parameterValues = new object[parameterTypes.Length];
+
+            if (parameterTypes.Length > 0 && parameterTypes.Length == parameter?.Length)
+            {
+                for (int i = 0; i < parameterTypes.Length; i++)
+                {
+                    var parameterType = parameterTypes[i];
+                    var parameterValue = parameter[i];
+
+                    var value = Convert.ChangeType(parameterValue, parameterType);
+                    
+                    if (value.GetType() != parameterType)
+                    {
+                        var exceptionText = $"Parameter {i} Type is: {parameterValue.GetType()} but should be {parameterType}";
+                        throw new ArgumentException(exceptionText);
+                    }
+
+                    parameterValues[i] = value;
+                }
+            }
+
             if (methodInfo.IsStatic)
             {
-                return methodInfo.Invoke(null, parameter);
+                return methodInfo.Invoke(null, parameterValues);
             }
 
             if (hostedObject != null)
             {
-                return methodInfo.Invoke(hostedObject, parameter);
+                return methodInfo.Invoke(hostedObject, parameterValues);
             }
 
             return null;

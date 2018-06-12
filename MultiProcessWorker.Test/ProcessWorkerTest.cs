@@ -34,9 +34,6 @@ namespace MultiProcessWorker.Test
         [Test]
         public void ProcessWorkerWithIntParameterTest()
         {
-            //JSON Problem int32 gets converted to int64 (Reflection don't likes that mismatch)
-            //https://github.com/dotnet/orleans/issues/1269
-
             const int i1 = 1337;
             var data0 = ProcessWorker.RunAndWait(RemoteExecuteInt1, i1);
             Assert.AreEqual(i1 * 2, data0);
