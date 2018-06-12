@@ -186,15 +186,16 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         private void DoWork(IpcCommunication<WorkCommand, WorkResult> ipcCommunication)
         {
             var workItem = m_WorkCommands.Dequeue();
-            var methodInfo = workItem.GetMethodInfo(m_HostedType);
-            if (methodInfo == null)
-            {
-                ipcCommunication.SendData(WorkResult.Create(workItem, new InvalidOperationException("methodInfo empty!")));
-                return;
-            }
 
             try
             {
+                var methodInfo = workItem.GetMethodInfo(m_HostedType);
+                if (methodInfo == null)
+                {
+                    ipcCommunication.SendData(WorkResult.Create(workItem, new InvalidOperationException("methodInfo empty!")));
+                    return;
+                }
+
                 var result = methodInfo.Execute(HostedObject, workItem.Parameter);
                 ipcCommunication.SendData(WorkResult.Create(workItem, result));
             }
