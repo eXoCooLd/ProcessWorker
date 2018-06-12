@@ -6,46 +6,49 @@ namespace MultiProcessWorker.Test
 {
     public interface IRemoteClass : IDisposable
     {
-        void Set(int value);
-        int Get();
+        void Set(Int64 value);
+        Int64 Get();
     }
 
     public sealed class RemoteClass : IRemoteClass
     {
-        private int m_InitialValue;
+        private Int64 m_InitialValue;
 
         public RemoteClass()
         {
             m_InitialValue = 1000;
+            Console.WriteLine("Initial " + m_InitialValue);
         }
 
-        public void Set(int value)
+        public void Set(Int64 value)
         {
+            Console.WriteLine("Set: " + value);
             m_InitialValue = value;
         }
 
-        public int Get()
+        public Int64 Get()
         {
+            Console.WriteLine("Get " + m_InitialValue);
             return m_InitialValue;
         }
 
         public void Dispose()
         {
-
+            Console.WriteLine("Dispose");
         }
     }
 
     public sealed class ProxyClass : IRemoteClass
     {
         private IMultiProcessWorker m_ProcessWorker = ProcessWorker.Create<RemoteClass>();
-        private int defaultTimeOut = 5000;
+        private int defaultTimeOut = 50000;
 
-        public void Set(int value)
+        public void Set(Int64 value)
         {
             m_ProcessWorker.ExecuteWait(Set, value, defaultTimeOut);
         }
 
-        public int Get()
+        public Int64 Get()
         {
             return m_ProcessWorker.ExecuteWait(Get, defaultTimeOut);
         }
@@ -61,7 +64,7 @@ namespace MultiProcessWorker.Test
     public class ProcessWorkerHostedObjectTest
     {
         [Test]
-        [Ignore("HostedObject not ready yet")]
+        //[Ignore("HostedObject not ready yet")]
         public void TestHostedObject()
         {
             using (IRemoteClass proxyClass = new ProxyClass())

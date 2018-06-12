@@ -28,6 +28,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
+
 #endregion Used Namespaces
 
 namespace MultiProcessWorker.Private.ProcessData
@@ -37,7 +39,7 @@ namespace MultiProcessWorker.Private.ProcessData
 
         #region Constants and Enums
 
-        private const string KeyPrefix = "-";
+        private const string KeyPrefix = @"\";
         private const string KeyValueSplitter = "=";
         private const string ArgumentSplitter = " ";
 
@@ -46,6 +48,7 @@ namespace MultiProcessWorker.Private.ProcessData
         private const string IpcProcessNameKey = "P";
         private const string IpcParentProgramKey = "X";
         private const string IpcRemoteTypeKey = "R";
+        private const string IpcAssemblyKey = "A";
 
         private const string ClientPostfix = "_Client";
         private const string ServerPostfix = "_Server";
@@ -110,16 +113,30 @@ namespace MultiProcessWorker.Private.ProcessData
             set { this[IpcParentProgramKey] = value.ToString(); }
         }
 
+        public Assembly IpcAssembly
+        {
+            get
+            {
+                var assemblyName = this[IpcAssemblyKey];
+                return Assembly.Load(assemblyName);
+            }
+            set
+            {
+                var assemblyName = value?.GetName().Name;
+                this[IpcAssemblyKey] = assemblyName;
+            }
+        }
+
         public Type IpcRemoteType
         {
             get
             {
                 var typeString = this[IpcRemoteTypeKey];
-                return !string.IsNullOrEmpty(typeString) ? Type.GetType(typeString) : null;
+                return !string.IsNullOrEmpty(typeString) ? IpcAssembly?.GetType(typeString) : null;
             }
             set
             {
-                var typeString = value?.AssemblyQualifiedName;
+                var typeString = value?.FullName;
                 this[IpcRemoteTypeKey] = typeString;
             }
         }
@@ -147,6 +164,7 @@ namespace MultiProcessWorker.Private.ProcessData
                                         IpcServerName = CreateIpcServerName(ipcName),
                                         IpcProcessName = CreateIpcProcessName(ipcName),
                                         IpcParentProgramPid = GetParentProgramPid(),
+                                        IpcAssembly = remoteType?.Assembly,
                                         IpcRemoteType = remoteType
             };
             return processArguments;

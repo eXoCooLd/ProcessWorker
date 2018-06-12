@@ -49,16 +49,38 @@ namespace MultiProcessWorker.Private.Helper
         /// <returns></returns>
         public static MethodInfo GetMethodInfo(this WorkCommand workCommand, Type type = null)
         {
+            if (workCommand == null)
+            {
+                return null;
+            }
+
+            if (workCommand.ParameterTypes?.Length > 0 && workCommand.ParameterTypes?.Length == workCommand.Parameter?.Length)
+            {
+                for (int i = 0; i < workCommand.ParameterTypes.Length; i++)
+                {
+                    var parameterType = workCommand.ParameterTypes[i];
+                    var parameterValue = workCommand.Parameter[i];
+
+                    if (parameterValue.GetType() != parameterType)
+                    {
+                        var exceptionText = $"Parameter {i} Type is: {parameterValue.GetType()} but should be {parameterType}";
+                        throw new ArgumentException(exceptionText);
+                    }
+                }
+            }
+
+            var parameterTypes = workCommand.ParameterTypes ?? new Type[0];
+
             if (type != null)
             {
-                var methodInfo = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.Instance);
+                var methodInfo = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Public | BindingFlags.InvokeMethod | BindingFlags.Instance, null, CallingConventions.Any, parameterTypes, null);
                 if (methodInfo != null)
                 {
                     return methodInfo;
                 }
             }
 
-            var methodInfoStatic = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod);
+            var methodInfoStatic = workCommand.Type.GetMethod(workCommand.Method, BindingFlags.Static | BindingFlags.Public | BindingFlags.InvokeMethod, null, CallingConventions.Any, parameterTypes, null);
             if (methodInfoStatic != null)
             {
                 return methodInfoStatic;

@@ -35,6 +35,7 @@ using MultiProcessWorker.Public.WorkItems;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 #endregion Used Namespaces
 
@@ -88,7 +89,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="ipcName"></param>
         internal MultiProcessWorkerClient(string ipcName) : this(ProcessArguments.Create(ipcName))
         {
-            HostedObjecType = null;
+
         }
 
         /// <summary>
@@ -98,11 +99,13 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="remoteType"></param>
         internal MultiProcessWorkerClient(string ipcName, Type remoteType) : this(ProcessArguments.Create(ipcName, remoteType))
         {
-            HostedObjecType = remoteType;
+            
         }
 
         private MultiProcessWorkerClient(ProcessArguments processArguments)
         {
+            HostedObjecType = processArguments.IpcRemoteType;
+
             m_WorkCommandResults = new ConcurrentDictionary<Guid, WorkResult>();
 
             m_IpcCommunication = IpcCommunication<WorkCommand, WorkResult>.CreateServer(processArguments.IpcServerName, processArguments.IpcClientName);
@@ -739,7 +742,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name);
+            var newWorkCommand = BuildWorkCommand(action);
 
             return StartWork(newWorkCommand);
         }
@@ -748,7 +751,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         {
             IsDisposedCheck();
 
-            var newWorkCommand = WorkCommand.Create(action.Method.DeclaringType, action.Method.Name, new object[] { p1 });
+            var newWorkCommand = BuildWorkCommand(action, new object[] { p1 });
 
             return StartWork(newWorkCommand);
         }
@@ -1010,8 +1013,8 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         private WorkCommand BuildWorkCommand(Delegate action, object[] parameters = null)
         {
             var objectType = HostedObjecType ?? action.Method.DeclaringType;
-
-            var newWorkCommand = WorkCommand.Create(objectType, action.Method.Name, parameters);
+            var parameterTypes = action.Method.GetParameters().Select(p => p.ParameterType).ToArray();
+            var newWorkCommand = WorkCommand.Create(objectType, action.Method.Name, parameters, parameterTypes);
 
             return newWorkCommand;
         }

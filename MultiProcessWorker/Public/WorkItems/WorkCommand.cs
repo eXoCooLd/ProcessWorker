@@ -50,9 +50,23 @@ namespace MultiProcessWorker.Public.WorkItems
         public string Method { get; set; }
 
         /// <summary>
-        /// Parame used for the method start
+        /// Parameter used for the method start
         /// </summary>
         public object[] Parameter { get; set; }
+
+        /// <summary>
+        /// Parameter Types for the method start
+        /// </summary>
+        public Type[] ParameterTypes { get; set; }
+
+        /// <summary>
+        /// To String for Outputs
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString()
+        {
+            return $"{nameof(Guid)}: {Guid} {nameof(Type)}: {Type} {nameof(Method)}: {Method} {nameof(Parameter)}: {Parameter}";
+        }
 
         /// <summary>
         /// Create a new WorkCommand
@@ -60,16 +74,18 @@ namespace MultiProcessWorker.Public.WorkItems
         /// <param name="type"></param>
         /// <param name="method"></param>
         /// <param name="parameter"></param>
+        /// <param name="parameterTypes"></param>
         /// <returns></returns>
-        public static WorkCommand Create(Type type, string method, object[] parameter = null)
+        public static WorkCommand Create(Type type, string method, object[] parameter = null, Type[] parameterTypes = null)
         {
             return new WorkCommand
                         {
                             Guid = Guid.NewGuid(),
                             Type = type,
                             Method = method,
-                            Parameter = parameter
-                        };
+                            Parameter = parameter,
+                            ParameterTypes = parameterTypes
+            };
         }
     }
 }

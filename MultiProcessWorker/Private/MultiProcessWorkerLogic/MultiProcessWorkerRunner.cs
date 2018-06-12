@@ -189,6 +189,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             var methodInfo = workItem.GetMethodInfo(m_HostedType);
             if (methodInfo == null)
             {
+                ipcCommunication.SendData(WorkResult.Create(workItem, new InvalidOperationException("methodInfo empty!")));
                 return;
             }
 
