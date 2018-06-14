@@ -14,7 +14,7 @@ public class ProcessWorkerExample
 	
 	public static string RemoteWorkJob()
 	{
-		return "Remote Job Done"
+		return "Remote Job Done";
 	}
 }
 ```
