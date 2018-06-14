@@ -1,10 +1,10 @@
 # ProcessWorker
 
-Prototype of a ProcessWorker that starts jobs in a new process and returns there return-value
+Prototype of a ProcessWorker that starts jobs in a new process and returns there return-values back to the main process
 
-For example a public static method:
+## Usage for a public static method:
 
-```
+```C#
 public class ProcessWorkerExample
 {
 	public void StartRemoteWork()
@@ -18,3 +18,6 @@ public class ProcessWorkerExample
 	}
 }
 ```
+
+## License
+[MIT](LICENSE)
