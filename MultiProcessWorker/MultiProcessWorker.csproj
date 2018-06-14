@@ -51,6 +51,7 @@
     <Compile Include="Private\Helper\AssemblyHelper.cs" />
     <Compile Include="Private\Helper\ReflectionHelper.cs" />
     <Compile Include="Private\Ipc\IpcCommunication.cs" />
+    <Compile Include="Private\MultiProcessWorkerLogic\MultiProcessWorkerClientBase.cs" />
     <Compile Include="Public\EventArgs\WorkCompleteEventArgs.cs" />
     <Compile Include="Public\Exceptions\ProcessWorkerCrashedException.cs" />
     <Compile Include="Public\Exceptions\ProcessWorkerRemoteException.cs" />

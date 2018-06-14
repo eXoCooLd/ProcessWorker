@@ -234,5 +234,6 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         }
 
         #endregion Private
+
     }
 }
