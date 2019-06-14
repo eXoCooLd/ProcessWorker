@@ -32,6 +32,15 @@ namespace MultiProcessWorker.Test
         }
 
         [Test]
+        public void ProcessWorkerRemoteAssertion()
+        {
+            var result = ProcessWorker.RunAndWait(RemoteAssertion, 42);
+            Assert.AreEqual(42, result);
+
+            Assert.Throws<ProcessWorkerRemoteException>(() => ProcessWorker.RunAndWait(RemoteAssertion, 32));
+        }
+
+        [Test]
         public void ProcessWorkerWithIntParameterTest()
         {
             const int i1 = 1337;
@@ -116,6 +125,14 @@ namespace MultiProcessWorker.Test
         public static string RemoteExceptionExecute()
         {
             throw new InvalidOperationException("Remote Exception!");
+        }
+
+        public static int RemoteAssertion(int value)
+        {
+            const int result = 42;
+            Assert.AreEqual(result, value, $"{nameof(value)} is not {result}");
+
+            return result;
         }
 
         public static int RemoteExecuteInt1(int value)
