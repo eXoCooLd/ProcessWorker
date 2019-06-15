@@ -133,7 +133,6 @@ namespace MultiProcessWorker.Test
         public static int IntMethodWhichThrows()
         {
             throw new Exception("THIS_EXCEPTION_FROM_INT_METHOD_SHOULD_BE_FORWARDED");
-            return 0;
         }
 
         public static void VoidMethodWhichThrows()
@@ -223,7 +222,6 @@ namespace MultiProcessWorker.Test
         {
             Thread.Sleep(5);
         }
-        #endregion Test Methods
 
         public static TestEnum RemoteEnum()
         {
@@ -234,6 +232,9 @@ namespace MultiProcessWorker.Test
         {
             return 12345;
         }
+
+        #endregion Test Methods
+
     }
 
     public enum TestEnum

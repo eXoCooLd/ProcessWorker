@@ -319,7 +319,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             {
                 if (IsDataReady(guid))
                 {
-                    return true;
+                    return CheckData(guid);
                 }
 
                 if (m_WorkerProcess.HasExited)
@@ -336,6 +336,26 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         #endregion Protected
 
         #region Private
+
+        /// <summary>
+        /// Get the result data from a work job without a return value
+        /// </summary>
+        /// <param name="guid"></param>
+        private bool CheckData(Guid guid)
+        {
+            WorkResult workResult;
+            if (m_WorkCommandResults.TryRemove(guid, out workResult))
+            {
+                if (workResult.Exception == null)
+                {
+                    return true;
+                }
+
+                throw new ProcessWorkerRemoteException(workResult.Exception);
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Get the result data from a work job
