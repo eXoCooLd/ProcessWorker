@@ -212,7 +212,22 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         {
             IsDisposedCheck();
 
-            return m_WorkCommandResults.ContainsKey(guid);
+            var isKeyContained = m_WorkCommandResults.ContainsKey(guid);
+            if (isKeyContained)
+            {
+                var result = m_WorkCommandResults[guid];
+                var exception = result.Exception;
+                if (exception != null)
+                {
+                    var innerException = exception.InnerException;
+                    if (innerException != null)
+                    {
+                        throw new ProcessWorkerRemoteException(exception);
+                    }
+                }
+            }
+
+            return isKeyContained;
         }
 
         /// <summary>
