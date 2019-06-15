@@ -13,6 +13,24 @@ namespace MultiProcessWorker.Test
         #region Tests
 
         [Test]
+        public void ProcessWorkerThrowingExceptionInVoidMethod()
+        {
+            Assert.Throws<ProcessWorkerRemoteException>(() =>
+            {
+                ProcessWorker.RunAndWait(VoidMethodWhichThrows);
+            });
+        }
+
+        [Test]
+        public void ProcessWorkerThrowingExceptionInIntMethod()
+        {
+            Assert.Throws<ProcessWorkerRemoteException>(() =>
+            {
+                ProcessWorker.RunAndWait(IntMethodWhichThrows);
+            });
+        }
+
+        [Test]
         public void ProcessWorkerOkTest()
         {
             var data = ProcessWorker.RunAndWait(RemoteExecute);
@@ -111,6 +129,17 @@ namespace MultiProcessWorker.Test
         #endregion Tests
 
         #region Test Methods
+
+        public static int IntMethodWhichThrows()
+        {
+            throw new Exception("THIS_EXCEPTION_FROM_INT_METHOD_SHOULD_BE_FORWARDED");
+            return 0;
+        }
+
+        public static void VoidMethodWhichThrows()
+        {
+            throw new Exception("THIS_EXCEPTION_FROM_VOID_METHOD_SHOULD_BE_FORWARDED");
+        }
 
         public string RemoteFailExecute()
         {
