@@ -10,7 +10,25 @@ namespace MultiProcessWorker.Test
     {
         private const string TestData = "Test123";
 
-        #region Tests
+    #region Tests
+
+        [Test]
+        public void PassEnumValueOne()
+        {
+            Assert.Throws<ProcessWorkerRemoteException>(() =>
+            {
+                ProcessWorker.RunAndWait(AssertGivenEnumValue, TestTheEnums.TestValueTwo);
+            });
+        }
+
+        [Test]
+        public void PassEnumValueTWo()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                ProcessWorker.RunAndWait(AssertGivenEnumValue, TestTheEnums.TestValueOne);
+            });
+        }
 
         [Test]
         public void ProcessWorkerThrowingExceptionInVoidMethod()
@@ -130,6 +148,11 @@ namespace MultiProcessWorker.Test
 
         #region Test Methods
 
+        public static void AssertGivenEnumValue(TestTheEnums anEnumValue)
+        {
+            Assert.AreNotEqual(TestTheEnums.TestValueOne, anEnumValue);
+        }
+
         public static int IntMethodWhichThrows()
         {
             throw new Exception("THIS_EXCEPTION_FROM_INT_METHOD_SHOULD_BE_FORWARDED");
@@ -243,5 +266,11 @@ namespace MultiProcessWorker.Test
         One = 1,
         Two = 2,
         Leet = 1337
+    }
+
+    public enum TestTheEnums
+    {
+        TestValueOne,
+        TestValueTwo
     }
 }
