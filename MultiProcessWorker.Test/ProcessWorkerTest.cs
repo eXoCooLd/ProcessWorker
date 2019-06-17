@@ -10,7 +10,7 @@ namespace MultiProcessWorker.Test
     {
         private const string TestData = "Test123";
 
-    #region Tests
+        #region Tests
 
         [Test]
         public void PassEnumValueOne()
@@ -22,7 +22,7 @@ namespace MultiProcessWorker.Test
         }
 
         [Test]
-        public void PassEnumValueTWo()
+        public void PassEnumValueTwo()
         {
             Assert.DoesNotThrow(() =>
             {
@@ -150,7 +150,7 @@ namespace MultiProcessWorker.Test
 
         public static void AssertGivenEnumValue(TestTheEnums anEnumValue)
         {
-            Assert.AreNotEqual(TestTheEnums.TestValueOne, anEnumValue);
+            Assert.AreEqual(TestTheEnums.TestValueOne, anEnumValue);
         }
 
         public static int IntMethodWhichThrows()

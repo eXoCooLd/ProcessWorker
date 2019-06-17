@@ -62,7 +62,7 @@ namespace MultiProcessWorker.Private.Helper
                     var parameterType = workCommand.ParameterTypes[i];
                     var parameterValue = workCommand.Parameter[i];
 
-                    var value = Convert.ChangeType(parameterValue, parameterType);
+                    var value = ConvertValueToParameterType(parameterType, parameterValue);
 
                     if (value.GetType() != parameterType)
                     {
@@ -147,8 +147,8 @@ namespace MultiProcessWorker.Private.Helper
                     var parameterType = parameterTypes[i];
                     var parameterValue = parameter[i];
 
-                    var value = Convert.ChangeType(parameterValue, parameterType);
-                    
+                    var value = ConvertValueToParameterType(parameterType, parameterValue);
+
                     if (value.GetType() != parameterType)
                     {
                         var exceptionText = $"Parameter {i} Type is: {parameterValue.GetType()} but should be {parameterType}";
@@ -172,6 +172,34 @@ namespace MultiProcessWorker.Private.Helper
             return null;
         }
 
+        /// <summary>
+        /// Handle the Type Convertion for the Parameters
+        /// </summary>
+        /// <param name="parameterType"></param>
+        /// <param name="parameterValue"></param>
+        /// <returns></returns>
+        private static object ConvertValueToParameterType(Type parameterType, object parameterValue)
+        {
+            object value;
+            if (!parameterType.IsEnum)
+            {
+                value = Convert.ChangeType(parameterValue, parameterType);
+            }
+            else
+            {
+                value = parameterValue is string
+                    ? Enum.Parse(parameterType, parameterValue.ToString())
+                    : Enum.ToObject(parameterType, parameterValue);
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Create a new instance of a type
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
         public static object CreateInstance(this Type type)
         {
             object instance = Activator.CreateInstance(type);
