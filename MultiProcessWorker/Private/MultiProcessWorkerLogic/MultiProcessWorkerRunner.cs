@@ -103,6 +103,9 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             if (m_HostedObject != null)
             {
+                // DEBUGGING
+                System.Diagnostics.Debugger.Launch();
+
                 (m_HostedObject as IDisposable)?.Dispose();
                 m_HostedObject = null;
             }

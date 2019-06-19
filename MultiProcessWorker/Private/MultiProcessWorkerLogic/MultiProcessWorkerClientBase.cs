@@ -140,6 +140,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             m_ProcessEventWaitHandle = new EventWaitHandle(false, EventResetMode.AutoReset, processArguments.IpcProcessName);
 
             m_WorkerProcess = CreateProcess(processArguments.ToString());
+            m_WorkerProcess.EnableRaisingEvents = true;
             m_WorkerProcess.Exited += OnWorkerProcessExited;
             m_WorkerProcess.Disposed += OnWorkerProcessDisposed;
             m_WorkerProcess.Start();
@@ -444,6 +445,9 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="e"></param>
         private void OnWorkerProcessExited(object sender, EventArgs e)
         {
+            // DEBUGGING
+            System.Diagnostics.Debugger.Launch();
+
             HandleProcessExit(sender);
         }
 

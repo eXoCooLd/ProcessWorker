@@ -34,6 +34,9 @@ namespace MultiProcessWorker.Test
 
         public void Dispose()
         {
+            // DEBUGGING
+            System.Diagnostics.Debugger.Launch();
+
             Console.WriteLine("Dispose");
         }
     }
