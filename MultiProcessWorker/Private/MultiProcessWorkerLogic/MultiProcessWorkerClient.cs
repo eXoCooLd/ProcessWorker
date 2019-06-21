@@ -51,8 +51,9 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// Create a remote worker with a hosted object
         /// </summary>
         /// <param name="ipcName"></param>
+        /// <param name="maxShutdownTimeout"></param>
         /// <param name="remoteType"></param>
-        internal MultiProcessWorkerClient(string ipcName, Type remoteType) : base(ipcName, remoteType)
+        internal MultiProcessWorkerClient(string ipcName, int maxShutdownTimeout, Type remoteType) : base(ipcName, maxShutdownTimeout, remoteType)
         {
             
         }

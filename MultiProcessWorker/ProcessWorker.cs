@@ -62,10 +62,11 @@ namespace MultiProcessWorker
         /// Create a remote worker with a hosted object
         /// </summary>
         /// <param name="name"></param>
+        /// <param name="maxShutdownTimeout"></param>
         /// <returns></returns>
-        public static IMultiProcessWorker Create<T>(string name = null)
+        public static IMultiProcessWorker Create<T>(string name = null, int maxShutdownTimeout = 60000)
         {
-            return new MultiProcessWorkerClient(name ?? RandomName, typeof(T));
+            return new MultiProcessWorkerClient(name ?? RandomName, maxShutdownTimeout, typeof(T));
         }
 
         #endregion Create ProcessWorker Instance

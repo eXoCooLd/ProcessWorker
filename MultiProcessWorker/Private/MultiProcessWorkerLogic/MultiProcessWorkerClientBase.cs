@@ -87,6 +87,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// </summary>
         public Type HostedObjecType { get; }
 
+        /// <summary>
+        /// Maximum Timeout for the shutdown of the Processworker with a hosted Object
+        /// </summary>
+        public int MaxShutdownTimeout { get; }
+
         #endregion Properties
 
         #region Events
@@ -111,17 +116,18 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// <param name="ipcName"></param>
         protected MultiProcessWorkerClientBase(string ipcName) : this(ProcessArguments.Create(ipcName))
         {
-
+            MaxShutdownTimeout = 0;
         }
 
         /// <summary>
         /// Create a remote worker with a hosted object
         /// </summary>
         /// <param name="ipcName"></param>
+        /// <param name="maxShutdownTimeout"></param>
         /// <param name="remoteType"></param>
-        protected MultiProcessWorkerClientBase(string ipcName, Type remoteType) : this(ProcessArguments.Create(ipcName, remoteType))
+        protected MultiProcessWorkerClientBase(string ipcName, int maxShutdownTimeout, Type remoteType) : this(ProcessArguments.Create(ipcName, remoteType))
         {
-
+            MaxShutdownTimeout = maxShutdownTimeout;
         }
 
         /// <summary>
@@ -169,9 +175,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             if (m_WorkerProcess != null)
             {
-                const int maxTimeOutSeconds = 120;
-                const int maxTimeOutMilliSeconds = maxTimeOutSeconds * 1000;
-                var timeOut = GetTimeOut(maxTimeOutMilliSeconds);
+                var timeOut = GetTimeOut(MaxShutdownTimeout);
 
                 do
                 {
