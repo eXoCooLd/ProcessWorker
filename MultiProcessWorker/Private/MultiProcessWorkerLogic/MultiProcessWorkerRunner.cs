@@ -100,7 +100,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         public void Dispose()
         {
             m_Run = false;
-
+            
             if (m_HostedObject != null)
             {
                 (m_HostedObject as IDisposable)?.Dispose();
@@ -109,11 +109,11 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             if (m_ParentProcess != null)
             {
-                AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
-
                 m_ParentProcess.Exited -= OnParentProcessExited;
                 m_ParentProcess.Dispose();
                 m_ParentProcess = null;
+
+                AppDomain.CurrentDomain.UnhandledException -= OnCurrentDomainUnhandledException;
             }
         }
 
@@ -149,8 +149,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             }
 
             exitThread.Join();
-
-            Environment.Exit((int)ExitCode.Ok);
+            Environment.ExitCode = (int)ExitCode.Ok;
         }
 
         #endregion Public
@@ -214,6 +213,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
                     if (eventWaitHandle.WaitOne(0))
                     {
                         m_Run = false;
+                        break;
                     }
                     Thread.Sleep(1);
                 }

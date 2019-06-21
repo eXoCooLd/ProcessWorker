@@ -169,6 +169,19 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             if (m_WorkerProcess != null)
             {
+                const int maxTimeOutSeconds = 120;
+                const int maxTimeOutMilliSeconds = maxTimeOutSeconds * 1000;
+                var timeOut = GetTimeOut(maxTimeOutMilliSeconds);
+
+                do
+                {
+                    Thread.Sleep(1);
+                    if (m_WorkerProcess.HasExited)
+                    {
+                        break;
+                    }
+                } while (DateTime.UtcNow.Ticks < timeOut);
+
                 if (!m_WorkerProcess.HasExited)
                 {
                     m_WorkerProcess.Kill();
