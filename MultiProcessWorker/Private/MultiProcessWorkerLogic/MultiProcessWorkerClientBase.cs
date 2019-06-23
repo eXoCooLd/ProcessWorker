@@ -175,16 +175,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
 
             if (m_WorkerProcess != null)
             {
-                var timeOut = GetTimeOut(MaxShutdownTimeout);
-
-                do
-                {
-                    Thread.Sleep(1);
-                    if (m_WorkerProcess.HasExited)
-                    {
-                        break;
-                    }
-                } while (DateTime.UtcNow.Ticks < timeOut);
+                WaitForRemoteProcessShutdown();
 
                 if (!m_WorkerProcess.HasExited)
                 {
@@ -473,7 +464,7 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             var process = sender as Process;
             if (process != null)
             {
-                var exitCode = (ExitCode)process.ExitCode;
+                var exitCode = GetExitCodeFromProcess(process);
                 RemoteProcessExit?.Invoke(this, exitCode);
 
                 if (exitCode != ExitCode.Ok)
@@ -482,6 +473,27 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
                     throw new ProcessWorkerCrashedException(process, exitCode);
                 }
             }
+        }
+
+        /// <summary>
+        /// Get the ExitCode from the Process
+        /// </summary>
+        /// <param name="process"></param>
+        /// <returns></returns>
+        private static ExitCode GetExitCodeFromProcess(Process process)
+        {
+            ExitCode exitCode;
+
+            try
+            {
+                exitCode = (ExitCode)process.ExitCode;
+            }
+            catch (InvalidOperationException)
+            {
+                return ExitCode.ErrorCrash;
+            }
+
+            return exitCode;
         }
 
         /// <summary>
@@ -517,6 +529,26 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
             };
 
             return workerProcess;
+        }
+
+        /// <summary>
+        /// Wait until the remote process is stoped or the timeout is raised
+        /// </summary>
+        private void WaitForRemoteProcessShutdown()
+        {
+            if (MaxShutdownTimeout > 0)
+            {
+                var timeOut = GetTimeOut(MaxShutdownTimeout);
+
+                do
+                {
+                    Thread.Sleep(1);
+                    if (m_WorkerProcess.HasExited)
+                    {
+                        break;
+                    }
+                } while (DateTime.UtcNow.Ticks < timeOut);
+            }
         }
 
         #endregion Internal
