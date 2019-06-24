@@ -536,19 +536,21 @@ namespace MultiProcessWorker.Private.MultiProcessWorkerLogic
         /// </summary>
         private void WaitForRemoteProcessShutdown()
         {
-            if (MaxShutdownTimeout > 0)
+            if (MaxShutdownTimeout <= 0)
             {
-                var timeOut = GetTimeOut(MaxShutdownTimeout);
-
-                do
-                {
-                    Thread.Sleep(1);
-                    if (m_WorkerProcess.HasExited)
-                    {
-                        break;
-                    }
-                } while (DateTime.UtcNow.Ticks < timeOut);
+                return;
             }
+
+            var timeOut = GetTimeOut(MaxShutdownTimeout);
+
+            do
+            {
+                Thread.Sleep(1);
+                if (m_WorkerProcess.HasExited)
+                {
+                    break;
+                }
+            } while (DateTime.UtcNow.Ticks < timeOut);
         }
 
         #endregion Internal

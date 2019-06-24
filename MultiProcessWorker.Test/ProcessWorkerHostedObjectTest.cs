@@ -5,16 +5,29 @@ using System.IO;
 
 namespace MultiProcessWorker.Test
 {
+    public enum ObjectEnum
+    {
+        Default = 0,
+        One,
+        Two,
+        Something
+    }
+
     public interface IRemoteClass : IDisposable
     {
         void Set(Int64 value);
         Int64 Get();
+
+        void SetObjectEnum(ObjectEnum enumValue);
+        ObjectEnum GetObjectEnum();
+
         void SetDisposeText(string file, string text);
     }
 
     public sealed class RemoteClass : IRemoteClass
     {
         private Int64 m_InitialValue;
+        private ObjectEnum m_ObjectEnum;
         private string m_File;
         private string m_DisposeText;
 
@@ -34,6 +47,16 @@ namespace MultiProcessWorker.Test
         {
             Console.WriteLine("Get: " + m_InitialValue);
             return m_InitialValue;
+        }
+
+        public void SetObjectEnum(ObjectEnum enumValue)
+        {
+            m_ObjectEnum = enumValue;
+        }
+
+        public ObjectEnum GetObjectEnum()
+        {
+            return m_ObjectEnum;
         }
 
         public void SetDisposeText(string file, string text)
@@ -62,6 +85,16 @@ namespace MultiProcessWorker.Test
         public Int64 Get()
         {
             return m_ProcessWorker.ExecuteWait(Get, defaultTimeOut);
+        }
+
+        public void SetObjectEnum(ObjectEnum enumValue)
+        {
+            m_ProcessWorker.ExecuteWait(SetObjectEnum, enumValue, defaultTimeOut);
+        }
+
+        public ObjectEnum GetObjectEnum()
+        {
+            return m_ProcessWorker.ExecuteWait(GetObjectEnum, defaultTimeOut);
         }
 
         public void SetDisposeText(string file, string text)
@@ -94,6 +127,12 @@ namespace MultiProcessWorker.Test
 
                 var result2 = proxyClass.Get();
                 Assert.AreEqual(5000, result2);
+
+                var enumValue = ObjectEnum.Two;
+                proxyClass.SetObjectEnum(enumValue);
+
+                var enumResult = proxyClass.GetObjectEnum();
+                Assert.AreEqual(enumValue, enumResult);
 
                 proxyClass.SetDisposeText(disposeFile, disposeText);
             }
