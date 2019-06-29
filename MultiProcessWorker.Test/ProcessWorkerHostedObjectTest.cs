@@ -13,6 +13,13 @@ namespace MultiProcessWorker.Test
         Something
     }
 
+    public enum TransportGenericEnum
+    {
+        One = 1,
+        Two = 2,
+        Three = 3
+    }
+
     public interface IRemoteClass : IDisposable
     {
         void Set(Int64 value);
@@ -22,6 +29,8 @@ namespace MultiProcessWorker.Test
         ObjectEnum GetObjectEnum();
 
         void SetDisposeText(string file, string text);
+
+        string TransportEnumValue<TEnum>(TEnum enumValue) where TEnum : struct, IConvertible;
     }
 
     public sealed class RemoteClass : IRemoteClass
@@ -30,6 +39,12 @@ namespace MultiProcessWorker.Test
         private ObjectEnum m_ObjectEnum;
         private string m_File;
         private string m_DisposeText;
+
+        public string TransportEnumValue<TEnum>(TEnum enumValue) where TEnum : struct, IConvertible
+        {
+            // https://stackoverflow.com/questions/6703180/generic-method-enum-to-string-conversion
+            return Enum.GetName(typeof(TEnum), enumValue);
+        }
 
         public RemoteClass()
         {
@@ -76,6 +91,12 @@ namespace MultiProcessWorker.Test
     {
         private IMultiProcessWorker m_ProcessWorker = ProcessWorker.Create<RemoteClass>();
         private int defaultTimeOut = 50000;
+
+        public string TransportEnumValue<TEnum>(TEnum enumValue) where TEnum : struct, IConvertible
+        {
+            return m_ProcessWorker.ExecuteWait(TransportEnumValue, enumValue);
+        }
+
 
         public void Set(Int64 value)
         {
@@ -135,6 +156,13 @@ namespace MultiProcessWorker.Test
                 Assert.AreEqual(enumValue, enumResult);
 
                 proxyClass.SetDisposeText(disposeFile, disposeText);
+
+                var returnedEnumString = proxyClass.TransportEnumValue<TransportGenericEnum>(TransportGenericEnum.One);
+
+                // https://stackoverflow.com/questions/6703180/generic-method-enum-to-string-conversion
+                var stringifiedEnumValue = Enum.GetName(typeof(TransportGenericEnum), TransportGenericEnum.One);
+
+                Assert.AreEqual(stringifiedEnumValue, returnedEnumString);
             }
 
             var disposeResult = File.ReadAllText(disposeFile);
